@@ -1,0 +1,17 @@
+{
+  "activation_dtype": "int8",
+  "weight_dtype": "int8",
+  "bias_dtype": "int32",
+  "acc_dtype": "int32",
+  "symmetric": true,
+  "zero_point_activation": 0,
+  "zero_point_weight": 0,
+  "zero_point_output": 0,
+  "requant": {
+    "mode": "mul_shift",
+    "multiplier_bits": 31,
+    "rounding": "nearest",
+    "clamp_min": -128,
+    "clamp_max": 127
+  }
+}
