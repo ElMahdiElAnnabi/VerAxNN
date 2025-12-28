@@ -197,6 +197,53 @@ def export_quantized(model_name: str, out_dir: Path, quant_spec_path: Path) -> N
                 }
             )
             tensor_map[node] = out_name
+        elif node.op == "call_function" and node.target in (
+            torch.nn.functional.avg_pool2d,
+            torch.nn.functional.max_pool2d,
+        ):
+            input_name = tensor_map[node.args[0]]
+            pool_kind = "avg_pool2d" if node.target == torch.nn.functional.avg_pool2d else "max_pool2d"
+            out_name = f"{pool_kind}_{node.name}"
+            kernel = node.args[1]
+            stride = node.kwargs.get("stride", kernel)
+            padding = node.kwargs.get("padding", 0)
+            nodes.append(
+                {
+                    "name": out_name,
+                    "type": pool_kind,
+                    "inputs": [input_name],
+                    "outputs": [out_name],
+                    "params": {
+                        "kernel": list(kernel) if isinstance(kernel, (list, tuple)) else [kernel, kernel],
+                        "stride": list(stride) if isinstance(stride, (list, tuple)) else [stride, stride],
+                        "padding": list(padding) if isinstance(padding, (list, tuple)) else [padding, padding],
+                    },
+                }
+            )
+            tensor_map[node] = out_name
+        elif node.op == "call_function" and node.target in (
+            torch.nn.functional.adaptive_avg_pool2d,
+            torch.nn.functional.adaptive_max_pool2d,
+        ):
+            input_name = tensor_map[node.args[0]]
+            out_name = f"adaptive_pool_{node.name}"
+            output_size = node.args[1]
+            nodes.append(
+                {
+                    "name": out_name,
+                    "type": "adaptive_avg_pool2d"
+                    if node.target == torch.nn.functional.adaptive_avg_pool2d
+                    else "adaptive_max_pool2d",
+                    "inputs": [input_name],
+                    "outputs": [out_name],
+                    "params": {
+                        "output_size": list(output_size)
+                        if isinstance(output_size, (list, tuple))
+                        else [output_size, output_size],
+                    },
+                }
+            )
+            tensor_map[node] = out_name
         elif node.op == "call_method" and node.target == "flatten":
             input_name = tensor_map[node.args[0]]
             out_name = f"flatten_{node.name}"

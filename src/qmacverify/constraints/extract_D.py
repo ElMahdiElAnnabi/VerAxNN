@@ -68,7 +68,7 @@ def extract_constraints(pkg: Path, out_path: Path, input_range: Interval) -> Non
                 int(req_mult[req_id]),
                 int(req_shift[req_id]),
             )
-        elif ntype == "flatten":
+        elif ntype in {"flatten", "avg_pool2d", "max_pool2d", "adaptive_avg_pool2d", "adaptive_max_pool2d"}:
             tensor_ranges[node["outputs"][0]] = tensor_ranges[node["inputs"][0]]
         elif ntype == "linear":
             x_int = tensor_ranges[node["inputs"][0]]

@@ -9,9 +9,13 @@ import numpy as np
 
 from qmacverify.runner.ops_exact import (
     add_int32,
+    adaptive_avg_pool2d_int32,
+    adaptive_max_pool2d_int32,
+    avg_pool2d_int32,
     conv2d_int8,
     flatten,
     linear_int8,
+    max_pool2d_int32,
     relu_int32,
     requant_int8,
 )
@@ -72,6 +76,34 @@ def run_exact(pkg: Path, input_path: Path | None, random_input: bool, out_dir: P
                 tensors[node["inputs"][0]],
                 start_dim=params_dict.get("start_dim", 1),
                 end_dim=params_dict.get("end_dim", -1),
+            )
+        elif ntype == "avg_pool2d":
+            params_dict = node.get("params", {})
+            tensors[node["outputs"][0]] = avg_pool2d_int32(
+                tensors[node["inputs"][0]],
+                kernel=tuple(params_dict.get("kernel", [2, 2])),
+                stride=tuple(params_dict.get("stride", [2, 2])),
+                padding=tuple(params_dict.get("padding", [0, 0])),
+            )
+        elif ntype == "max_pool2d":
+            params_dict = node.get("params", {})
+            tensors[node["outputs"][0]] = max_pool2d_int32(
+                tensors[node["inputs"][0]],
+                kernel=tuple(params_dict.get("kernel", [2, 2])),
+                stride=tuple(params_dict.get("stride", [2, 2])),
+                padding=tuple(params_dict.get("padding", [0, 0])),
+            )
+        elif ntype == "adaptive_avg_pool2d":
+            params_dict = node.get("params", {})
+            tensors[node["outputs"][0]] = adaptive_avg_pool2d_int32(
+                tensors[node["inputs"][0]],
+                output_size=tuple(params_dict.get("output_size", [1, 1])),
+            )
+        elif ntype == "adaptive_max_pool2d":
+            params_dict = node.get("params", {})
+            tensors[node["outputs"][0]] = adaptive_max_pool2d_int32(
+                tensors[node["inputs"][0]],
+                output_size=tuple(params_dict.get("output_size", [1, 1])),
             )
         elif ntype == "linear":
             weight = params[node["params"]["weight_key"]]
